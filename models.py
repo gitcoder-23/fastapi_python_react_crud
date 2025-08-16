@@ -4,21 +4,22 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 
 class User(Model):
     id = fields.IntField(pk=True)
-    username = fields.CharField(max_length=50)
+    username = fields.CharField(max_length=100)
     email = fields.CharField(max_length=100)
+    phone = fields.CharField(max_length=15, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
     def __str__(self):
         return self.username
 
     class Meta:
-        table = "users"
+        table = "user"
         ordering = ["-created_at"]
 
 class Product(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=100, nullable=False)
-    # description = fields.TextField()
+    description = fields.TextField()
     quantity_in_stock = fields.IntField(default=0)
     quantity_sold = fields.IntField(default=0)
     unit_price = fields.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -32,7 +33,7 @@ class Product(Model):
         return self.name
 
     class Meta:
-        table = "products"
+        table = "product"
         ordering = ["-created_at"]
 
 
@@ -49,7 +50,7 @@ class Supplier(Model):
         return self.name
 
     class Meta:
-        table = "suppliers"
+        table = "supplier"
         ordering = ["-created_at"]
 
 
