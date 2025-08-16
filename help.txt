@@ -1,0 +1,18 @@
+// Full playlist
+https://youtube.com/playlist?list=PLU7aW4OZeUzwYXbC_mbQJdAU7JUu81RZo&si=aeXl7X0BfPYv2Tpr
+
+
+// All required install process
+https://youtu.be/tWv8Mi35jSQ?si=02iT-czX28n-23tJ
+
+// install process
+1> python3 -m venv venv
+2> source venv/bin/activate
+3> pip install fastapi
+3> pip install tortoise-orm
+4> pip install uvicorn (to run the fastapi server)
+
+5>--> auto start --> uvicorn app:app --reload
+
+// Fastapi Swagger
+http://localhost:8000/docs#/default/index__get
