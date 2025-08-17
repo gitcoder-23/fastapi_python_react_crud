@@ -1,3 +1,4 @@
+from decimal import Decimal
 
 from fastapi import APIRouter
 from models import (Product, product_pydantic, product_pydanticIn, Supplier)
@@ -6,6 +7,16 @@ router = APIRouter(
     prefix="/products",
     tags=["Product"]
 )
+
+def as_int(v) -> int:
+    if v is None:
+        return 0
+    if isinstance(v, int):
+        return v
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return int(Decimal(str(v)))
 
 
 @router.post("/")
@@ -55,11 +66,13 @@ async def update_product(product_id: int, update_info: product_pydanticIn):  # t
     product.unit_price        = int(payload.get("unit_price", product.unit_price))  # paise
 
     # Recompute revenue deterministically (no +=)
-    product.revenue = product.quantity_sold * product.unit_price
+    product.revenue = (product.quantity_sold * product.unit_price) 
 
     await product.save()
     response = await product_pydantic.from_tortoise_orm(product)
     return {"status": "success", "data": response}
+
+
 
 
 
