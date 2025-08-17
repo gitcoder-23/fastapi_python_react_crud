@@ -16,25 +16,66 @@ class User(Model):
         table = "user"
         ordering = ["-created_at"]
 
+# class Product(Model):
+#     id = fields.IntField(pk=True)
+#     name = fields.CharField(max_length=100, nullable=False)
+#     description = fields.TextField()
+#     quantity_in_stock = fields.IntField(default=0)
+#     quantity_sold = fields.IntField(default=0)
+#     unit_price = fields.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+#     revenue = fields.DecimalField(max_digits=20, decimal_places=2, default=0.00)
+
+#     supplied_by = fields.ForeignKeyField("models.Supplier", related_name="goods_supplied", null=True)
+#     created_at = fields.DatetimeField(auto_now_add=True)
+#     updated_at = fields.DatetimeField(auto_now=True)
+
+#     def __str__(self):
+#         return self.name
+
+#     class Meta:
+#         table = "product"
+#         ordering = ["-created_at"]
+
 class Product(Model):
     id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=100, nullable=False)
-    description = fields.TextField()
+    name = fields.CharField(max_length=100, null=False)
+    description = fields.TextField(null=True)
+
     quantity_in_stock = fields.IntField(default=0)
     quantity_sold = fields.IntField(default=0)
-    unit_price = fields.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    revenue = fields.DecimalField(max_digits=20, decimal_places=2, default=0.00)
 
-    supplied_by = fields.ForeignKeyField("models.Supplier", related_name="goods_supplied", null=True)
+    # Store money in paise (integers) to avoid Decimal JSON quirks
+    unit_price = fields.BigIntField(default=0, description="Price per unit in paise")
+    revenue = fields.BigIntField(default=0, description="Total revenue in paise")
+
+    supplied_by = fields.ForeignKeyField(
+        "models.Supplier", related_name="goods_supplied", null=True
+    )
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         table = "product"
         ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
+
+    async def save(self, *args, **kwargs):
+        # Keep revenue consistent on every save
+        unit = int(self.unit_price or 0)
+        sold = int(self.quantity_sold or 0)
+        self.revenue = sold * unit
+        await super().save(*args, **kwargs)
+
+    # Optional convenience accessors (for UI/display in rupees)
+    @property
+    def unit_price_rupees(self) -> float:
+        return (self.unit_price or 0) / 100
+
+    @property
+    def revenue_rupees(self) -> float:
+        return (self.revenue or 0) / 100
 
 
 class Supplier(Model):

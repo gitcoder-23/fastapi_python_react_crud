@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter
 from models import (Product, product_pydantic, product_pydanticIn, Supplier)
 
@@ -48,12 +49,30 @@ async def delete_product(product_id: int):
 
 
 # Product by supplier id
-@router.post("/product/{supplier_id}")
-async def add_products_by_supplier(supplier_id: int, product_details: product_pydanticIn ): # type: ignore
+@router.post("/{supplier_id}")
+async def add_products_by_supplier(supplier_id: int, product_details: product_pydanticIn):  # type: ignore
     supplier = await Supplier.get(id=supplier_id)
-    product_details = product_details.dict(exclude_unset=True)
-    product_details['revenue'] += product_details['quantity_sold'] * product_details['unit_price']
-    product_obj = await Product.create(**product_details, supplied_by=supplier)
+    payload = product_details.dict(exclude_unset=True)
+
+    # Expect paise in the payload; coerce to int
+    payload["unit_price"] = int(payload.get("unit_price", 0))
+    payload["quantity_sold"] = int(payload.get("quantity_sold", 0))
+
+    # Do NOT compute revenue here; model save() will compute it
+    payload.pop("revenue", None)
+
+    product_obj = await Product.create(**payload, supplied_by=supplier)
     response = await product_pydantic.from_tortoise_orm(product_obj)
-    return {'status': 'success', 'data': response}
+    return {"status": "success", "data": response}
+
+
+
+# @router.post("/product/{supplier_id}")
+# async def add_products_by_supplier(supplier_id: int, product_details: product_pydanticIn ): # type: ignore
+#     supplier = await Supplier.get(id=supplier_id)
+#     product_details = product_details.dict(exclude_unset=True)
+#     product_details['revenue'] += product_details['quantity_sold'] * product_details['unit_price']
+#     product_obj = await Product.create(**product_details, supplied_by=supplier)
+#     response = await product_pydantic.from_tortoise_orm(product_obj)
+#     return {'status': 'success', 'data': response}
 
