@@ -1,0 +1,5 @@
+# non upload files
+*.sqlite3
+controllers/__pycache__/
+.vscode/
+__pycache__/
