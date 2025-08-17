@@ -25,21 +25,42 @@ async def get_specific_product(product_id: int):
     return {'status': 'success', 'data': response}
 
 
+# @router.put("/{product_id}")
+# async def update_product(product_id: int, update_info: product_pydanticIn): # type: ignore
+#     product = await Product.get(id=product_id)
+#     update_info = update_info.dict(exclude_unset=True)
+#     product.name = update_info['name']
+#     product.description = update_info['description']
+#     product.quantity_in_stock = update_info['quantity_in_stock']
+#     product.quantity_sold = update_info['quantity_sold']
+#     product.unit_price = update_info['unit_price']
+#     product.revenue += update_info['quantity_sold'] * update_info['unit_price']
+
+#     await product.save()
+
+#     response = await product_pydantic.from_tortoise_orm(product)
+#     return {'status': 'success', 'data': response}
+
 @router.put("/{product_id}")
-async def update_product(product_id: int, update_info: product_pydanticIn): # type: ignore
+async def update_product(product_id: int, update_info: product_pydanticIn):  # type: ignore
     product = await Product.get(id=product_id)
-    update_info = update_info.dict(exclude_unset=True)
-    product.name = update_info['name']
-    product.description = update_info['description']
-    product.quantity_in_stock = update_info['quantity_in_stock']
-    product.quantity_sold = update_info['quantity_sold']
-    product.unit_price = update_info['unit_price']
-    product.revenue += update_info['quantity_sold'] * update_info['unit_price']
+    payload = update_info.dict(exclude_unset=True)
+
+    # Use current values as defaults and coerce types
+    product.name = payload.get("name", product.name)
+    product.description = payload.get("description", product.description)
+
+    product.quantity_in_stock = int(payload.get("quantity_in_stock", product.quantity_in_stock))
+    product.quantity_sold     = int(payload.get("quantity_sold", product.quantity_sold))
+    product.unit_price        = int(payload.get("unit_price", product.unit_price))  # paise
+
+    # Recompute revenue deterministically (no +=)
+    product.revenue = product.quantity_sold * product.unit_price
 
     await product.save()
-
     response = await product_pydantic.from_tortoise_orm(product)
-    return {'status': 'success', 'data': response}
+    return {"status": "success", "data": response}
+
 
 
 @router.delete("/{product_id}")
